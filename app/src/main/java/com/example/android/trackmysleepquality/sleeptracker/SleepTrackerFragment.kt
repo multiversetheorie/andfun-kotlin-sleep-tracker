@@ -22,7 +22,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import com.example.android.trackmysleepquality.R
+import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
 
 /**
@@ -43,6 +45,30 @@ class SleepTrackerFragment : Fragment() {
         // Get a reference to the binding object and inflate the fragment views.
         val binding: FragmentSleepTrackerBinding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_sleep_tracker, container, false)
+
+        // Reference to the application this fragment is attached to
+        // The application is passed in to the ViewModelProver.Factory (SleepTrackerViewModelFactory)
+        // (in this case: SleepTrackerViewModelFactory)
+        // requireNotNull throws and IllegalArgumentException if the value is null
+        val application = requireNotNull(this.activity).application
+
+        // Creates reference our datasource (ie. SleepDatabase) via a reference to a Dao (ie. SleepDatabaseDao)
+        val dataSource = SleepDatabase.getInstance(application).sleepDatabaseDao
+
+        // Creates an instance of the ViewModelFactory (here: SleepTrackerViewModelFactory)
+        // We pass in the dataSource and the application
+        val viewModelFactory = SleepTrackerViewModelFactory(dataSource, application)
+
+        // We 'ask' the ViewModelProver for an instance of SleepTrackerViewModel, using our ViewModelFactory
+        val sleepTrackerViewModel =
+                ViewModelProviders.of(this, viewModelFactory).get(SleepTrackerViewModel::class.java)
+
+        // Pass the viewModel into binding ('Let the binding know about our viewModel')
+        binding.sleepTrackerViewModel = sleepTrackerViewModel
+
+        // Specifies the current activity/fragment as the LifecycleOwner of the DataBinding
+        // This is necessary for the binding to observe LiveData updates
+        binding.setLifecycleOwner(this)
 
         return binding.root
     }
