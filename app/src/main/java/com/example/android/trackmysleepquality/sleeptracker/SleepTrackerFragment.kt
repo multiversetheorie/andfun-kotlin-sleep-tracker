@@ -22,7 +22,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
@@ -62,6 +64,18 @@ class SleepTrackerFragment : Fragment() {
         // We 'ask' the ViewModelProver for an instance of SleepTrackerViewModel, using our ViewModelFactory
         val sleepTrackerViewModel =
                 ViewModelProviders.of(this, viewModelFactory).get(SleepTrackerViewModel::class.java)
+
+        // Set up observer for navigateToSleepQuality variable
+        // Navigate and pass along the ID of the current night
+        // Call doneNavigating, to reset variable
+        sleepTrackerViewModel.navigateToSleepQuality.observe(this, Observer { night ->
+            night?.let {
+                this.findNavController().navigate(
+                        SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepQualityFragment(night.nightId)
+                )
+                sleepTrackerViewModel.doneNavigating()
+            }
+        })
 
         // Pass the viewModel into binding ('Let the binding know about our viewModel')
         binding.sleepTrackerViewModel = sleepTrackerViewModel
