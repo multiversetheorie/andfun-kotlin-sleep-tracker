@@ -15,3 +15,52 @@
  */
 
 package com.example.android.trackmysleepquality.sleepquality
+
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.example.android.trackmysleepquality.database.SleepDatabaseDao
+import kotlinx.coroutines.*
+
+class SleepQualityViewModel(
+        private val sleepNightKey: Long = 0L,
+        val database: SleepDatabaseDao) : ViewModel() {
+
+    private var viewModelJob = Job()
+    private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
+    }
+
+    // Encapsulated navigation event LiveData
+    private val _navigateToSleepTracker = MutableLiveData<Boolean?>()
+    val navigateToSleepTracker: LiveData<Boolean?>
+        get() = _navigateToSleepTracker
+
+    // Function that handles clicking on the sleep quality images (smileys)
+    // Launches a coroutine in the uiScope, then switches to the IO dispatcher.
+    // In the IO Dispatcher, it gets the current night using the sleepNightKey.
+    // If the value is null, it returns to the suspend function call.
+    // Sets the sleep quality based on the chosen quality and
+    // updates the given night in the database. After that it triggers navigation.
+    //
+    // This is done with 2 separate functions in SleepTrackerViewModel:
+    // onStopTracking() and update(night: SleepNight)
+    fun onSetSleepQuality(quality: Int) {
+        uiScope.launch {
+            withContext(Dispatchers.IO) {
+                val tonight = database.get(sleepNightKey) ?: return@withContext
+                tonight.sleepQuality = quality
+                database.update(tonight)
+            }
+            _navigateToSleepTracker.value = true
+        }
+    }
+
+    // Resets navigation event
+    fun doneNavigating() {
+        _navigateToSleepTracker.value = null
+    }
+}

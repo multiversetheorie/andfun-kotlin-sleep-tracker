@@ -49,7 +49,7 @@ class SleepTrackerFragment : Fragment() {
                 inflater, R.layout.fragment_sleep_tracker, container, false)
 
         // Reference to the application this fragment is attached to
-        // The application is passed in to the ViewModelProver.Factory (SleepTrackerViewModelFactory)
+        // The application is passed in to the ViewModelProvider.Factory (SleepTrackerViewModelFactory)
         // (in this case: SleepTrackerViewModelFactory)
         // requireNotNull throws and IllegalArgumentException if the value is null
         val application = requireNotNull(this.activity).application
