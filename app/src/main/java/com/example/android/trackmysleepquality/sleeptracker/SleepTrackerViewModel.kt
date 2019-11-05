@@ -67,6 +67,28 @@ class SleepTrackerViewModel(
     val navigateToSleepQuality: LiveData<SleepNight>
         get() = _navigateToSleepQuality
 
+    // Encapsulated Snackbar event LiveData
+    private val _showSnackbarEvent = MutableLiveData<Boolean>()
+    val showSnackbarEvent: LiveData<Boolean>
+        get() = _showSnackbarEvent
+
+    // Variables that regulate the visibility of Start, Stop and Clear buttons.
+    // Transformation methods carry information across the observers lifecycle.
+    // Transformations are only calculated if an observer is observing the object.
+    // Transformations.map lets us apply a function to the output of LiveData.
+    // Start button is only visible if the current night is null (there is none)
+    // Stop button is only visible if the current night is not null (there is a tracking in progress)
+    // Clear button is only visible if the list of nights is not empty
+    val startButtonVisible = Transformations.map(tonight) {
+        null == it
+    }
+    val stopButtonVisible = Transformations.map(tonight) {
+        null != it
+    }
+    val clearButtonVisible = Transformations.map(nights) {
+        it?.isNotEmpty()
+    }
+
     // Initialize tonight, so that we can use it
     init {
         initializeTonight()
@@ -141,6 +163,7 @@ class SleepTrackerViewModel(
         uiScope.launch {
             clear()
             tonight.value = null
+            _showSnackbarEvent.value = true
         }
     }
 
@@ -154,6 +177,11 @@ class SleepTrackerViewModel(
     // Resets navigation event
     fun doneNavigating() {
         _navigateToSleepQuality.value = null
+    }
+
+    // Resets SnackBar event
+    fun doneShowingSnackbar() {
+        _showSnackbarEvent.value = false
     }
 }
 
